@@ -29,13 +29,10 @@ fn main() {
     hasher.update(& seed);
 
     // processes the hash and consumes the hasher object
-    let hashed_seed = hasher.finalize();
-
-    // sets the base number for the Base94 encoding.
-    let base = 94;
+    let seed = hasher.finalize();
 
     // encodes the hashed_seed in base94
-    let encoded_hash = encode(& hashed_seed, base);
+    let seed = encode(& seed, 94);
     
-    println!("{}", encoded_hash);
+    println!("{}", seed);
 }
