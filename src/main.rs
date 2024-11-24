@@ -9,6 +9,9 @@ use std::io;
 // reads command-line arguments from the user
 use std::env;
 
+// Used for the exit() function.
+use std::process;
+
 // SHA512 hashes binary data
 use sha2::{Sha512, Digest};
 
@@ -24,21 +27,48 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     // values for later use in the program
-    let mut testing: bool = false;
+    let mut password_length: i32 = 0;
     let mut program_name = String::new();
+    let mut getlength = false;
 
     // iterates on the vector of command line arguments
     for argument in args {
         match argument.as_str() {
-            "testing" => { testing = true; }
+
+            // Displays the help() text when matched.
+            "help" => { help(); }
+
+            // Gets the next argument as password_length.
+            "length" => { getlength = true; }
+
+            // Tests for password_length and handles errors.
             _ => {
+                // Captures the program name.
                 if program_name.is_empty() {
                     program_name = String::from(argument);
+
+                // Tests the password_length and saves it.
+                } else if password_length == 0 && getlength == true {
+                    match argument.parse::<i32>() {
+
+                        // Sets the password_length when Okay.
+                        Ok(n) => {
+                            password_length = n;
+                            getlength = false;
+                        },
+
+                        // Panics when the String can't be parsed into an i32.
+                        Err(e) => { panic!("{}. That is not a valid integer.", e); }
+                    }
                 } else {
                     panic!("{} is not a valid argument.", argument);
                 }
             }
         }
+    }
+
+    if password_length == 0 {
+        password_length = 32;
     }
 
     // collects the String data from the user and processes potential errors.
@@ -75,11 +105,18 @@ fn hash_and_base94(seed: String) -> String {
     seed
 }
 
+fn help() {
+    println!("The help message is not yet implemented. Good luck.");
+    process::exit(0);
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    // Tests that the hashing function produces the correct ouput
+    // for a given input.
     #[test]
     fn hash_test() {
         let comparitor = String::from("=tD-,fsd#3N2+UyWOBhGeq_H|{`arN'~BIi!6fN4t:$s4goerLV40uewQ&#c9DzGV*e3obd&Y#[-4R");
