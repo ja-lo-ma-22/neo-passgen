@@ -46,9 +46,13 @@ fn main() {
         .read_line(&mut seed)
         .expect("Failed to read seed.");
 
+    // Removes trailing '/n' newline character.
+    seed.pop();
+
     // Calls the function and recieves a value.
     let seed = hash_and_base94(seed);
     
+    // Prints the final seed to the command line for the user.
     println!("{}", seed);
 }
 
@@ -69,4 +73,17 @@ fn hash_and_base94(seed: String) -> String {
 
     // Returns the final Base94 String.
     seed
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hash_test() {
+        let comparitor = String::from("=tD-,fsd#3N2+UyWOBhGeq_H|{`arN'~BIi!6fN4t:$s4goerLV40uewQ&#c9DzGV*e3obd&Y#[-4R");
+        let output = hash_and_base94(String::from("testing"));
+        assert_eq!(output, comparitor);
+    }
 }
