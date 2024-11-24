@@ -46,17 +46,27 @@ fn main() {
         .read_line(&mut seed)
         .expect("Failed to read seed.");
 
-    // creates a hash object to process data.
-    let mut hasher = Sha512::new();
-
-    // inputs seed data
-    hasher.update(& seed);
-
-    // processes the hash and consumes the hasher object.
-    let seed = hasher.finalize();
-
-    // encodes the hashed_seed in base94
-    let seed = encode(& seed, 94);
+    // Calls the function and recieves a value.
+    let seed = hash_and_base94(seed);
     
     println!("{}", seed);
+}
+
+
+
+fn hash_and_base94(seed: String) -> String {
+    // Creates hash object to process the seed.
+    let mut hasher = Sha512::new();
+
+    // Inputs the seed into the hash object.
+    hasher.update(& seed);
+
+    // Processes the seed and outputs the final hash in binary.
+    let seed = hasher.finalize();
+
+    // Encodes the binary hash as a Base94 String.
+    let seed = encode(& seed, 94);
+
+    // Returns the final Base94 String.
+    seed
 }
