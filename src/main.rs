@@ -80,7 +80,7 @@ fn main() {
     seed.pop();
 
     // Calls the function and recieves a value.
-    let seed = hash_and_base94(seed);
+    let seed = hash_and_base94(seed, password_length);
     
     // Prints the final seed to the command line for the user.
     println!("{}", seed);
@@ -88,7 +88,7 @@ fn main() {
 
 
 
-fn hash_and_base94(seed: String) -> String {
+fn hash_and_base94(seed: String, length: i32) -> String {
     // Creates hash object to process the seed.
     let mut hasher = Sha512::new();
 
@@ -99,7 +99,9 @@ fn hash_and_base94(seed: String) -> String {
     let seed = hasher.finalize();
 
     // Encodes the binary hash as a Base94 String.
-    let seed = encode(& seed, 94);
+    let mut seed = encode(& seed, 94);
+
+    seed.truncate(length.try_into().unwrap());
 
     // Returns the final Base94 String.
     seed
@@ -120,7 +122,7 @@ mod tests {
     #[test]
     fn hash_test() {
         let comparitor = String::from("=tD-,fsd#3N2+UyWOBhGeq_H|{`arN'~BIi!6fN4t:$s4goerLV40uewQ&#c9DzGV*e3obd&Y#[-4R");
-        let output = hash_and_base94(String::from("testing"));
+        let output = hash_and_base94(String::from("testing"), 1000);
         assert_eq!(output, comparitor);
     }
 }
