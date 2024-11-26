@@ -42,7 +42,7 @@ fn main() {
     seed.pop();
 
     // Calls the function and recieves a value.
-    let seed = hash_and_base94(seed, args.get(1).unwrap().parse::<i32>().unwrap());
+    let seed = hash_and_base94(seed, args.1);
     
     // Prints the final seed to the command line for the user.
     println!("{}", seed);
@@ -71,10 +71,11 @@ fn hash_and_base94(seed: String, length: i32) -> String {
 
 // Processes command line arguments and then outputs a Vec of Strings
 // that can be much more easily parsed into variables.
-fn process_args(args: Vec<String>) -> Vec<String> {
+fn process_args(args: Vec<String>) -> (String, i32) {
 
     // Vector that catches all the values processed here.
-    let mut output = Vec::new();
+    // Default password_length is defined as index 1.
+    let mut output: (String, i32) = (String::from("blank"), 32);
     
     // Iterates through the arguments as input.
     for argument in args {
@@ -84,25 +85,22 @@ fn process_args(args: Vec<String>) -> Vec<String> {
             "help" => { help(); }
 
             // Sets the program to grab the next argument as password_length.
-            "length" => { output[1] = String::from("0"); }
+            "length" => { output.1 = 0; }
 
             // Catches errors and handles the value for password_length and program_name.
             _ => {
 
                 // Grabs the program name and saves it.
-                if output.is_empty() {
-                    output.push(String::from(argument));
-
-                    // Sets the default value for password_length.
-                    output.push(String::from("32"));
+                if output.0 == String::from("blank") {
+                    output.0 = String::from(argument);
 
                 // Catches the value for password_length and handles errors.
-                } else if *output.get(1).unwrap() == String::from("0") {
+                } else if output.1 == 0 {
                     match argument.parse::<i32>() {
 
                         // When password_length value is valid it saves it for later.
                         Ok(n) => {
-                            output[1] = n.to_string();
+                            output.1 = n;
                         }
 
                         // When password_length value is invalid, it notifies the user and exits.
@@ -138,8 +136,34 @@ mod tests {
     // for a given input.
     #[test]
     fn hash_test() {
+
+        // Correct output for hash.
         let comparitor = String::from("=tD-,fsd#3N2+UyWOBhGeq_H|{`arN'~BIi!6fN4t:$s4goerLV40uewQ&#c9DzGV*e3obd&Y#[-4R");
+
+        // Processed hash inputs for the correct output.
         let output = hash_and_base94(String::from("testing"), 1000);
+
+        // Tests that processed output and correct output are the same.
         assert_eq!(output, comparitor);
+    }
+
+    // Tests the process_args function.
+    #[test]
+    fn process_args_test() {
+
+        // Fake input arguments.
+        let mut args = Vec::new();
+        args.push(String::from("program/name"));
+        args.push(String::from("length"));
+        args.push(String::from("50"));
+
+        // Processes fake input args.
+        let out_args = process_args(args);
+
+        // Correct processed args.
+        let comparitor: (String, i32) = (String::from("program/name"), 50);
+
+        // Tests that the correct args and the processed args are equal.
+        assert_eq!(comparitor, out_args);
     }
 }
