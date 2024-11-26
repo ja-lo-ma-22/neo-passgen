@@ -69,11 +69,11 @@ fn hash_and_base94(seed: String, length: i32) -> String {
     seed
 }
 
-// Processes command line arguments and then outputs a Vec of Strings
+// Processes command line arguments and then outputs a tuple.
 // that can be much more easily parsed into variables.
 fn process_args(args: Vec<String>) -> (String, i32) {
 
-    // Vector that catches all the values processed here.
+    // Tuple that catches all the values processed here.
     // Default password_length is defined as index 1.
     let mut output: (String, i32) = (String::from("blank"), 32);
     
@@ -177,21 +177,37 @@ mod tests {
         assert_eq!(output, comparitor);
     }
 
-    // Tests the process_args function.
     #[test]
-    fn process_args_test() {
+    fn test_process_no_args() {
+
+        // Fake set of arguments.
+        let args = vec![String::from("program/name")];
+
+        // Porcesses fake arguments.
+        let out_args = process_args(args);
+
+        // Correct output.
+        let comparitor: (String, i32) = (String::from("program/name"), 32);
+
+        // Tests ouput against correct output.
+        assert_eq!(out_args, comparitor);
+    }
+
+    #[test]
+    fn test_process_some_args() {
 
         // Fake input arguments.
-        let mut args = Vec::new();
-        args.push(String::from("program/name"));
-        args.push(String::from("length"));
-        args.push(String::from("50"));
+        let args = vec![
+            String::from("folder/program/name"),
+            String::from("length"),
+            String::from("50")
+        ];
 
         // Processes fake input args.
         let out_args = process_args(args);
 
         // Correct processed args.
-        let comparitor: (String, i32) = (String::from("program/name"), 50);
+        let comparitor: (String, i32) = (String::from("folder/program/name"), 50);
 
         // Tests that the correct args and the processed args are equal.
         assert_eq!(comparitor, out_args);
