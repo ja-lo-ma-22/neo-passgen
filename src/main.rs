@@ -26,50 +26,12 @@ fn main() {
     // collects command-line arguments into a vector
     let args: Vec<String> = env::args().collect();
 
-    // values for later use in the program
-    let mut password_length: i32 = 0;
-    let mut program_name = String::new();
-    let mut getlength = false;
+    // Sends the command-line arguments to a function to process, and returns an easy Vec<String> to parse.
+    let args = process_args(args);
 
-    // iterates on the vector of command line arguments
-    for argument in args {
-        match argument.as_str() {
-
-            // Displays the help() text when matched.
-            "help" => { help(); }
-
-            // Gets the next argument as password_length.
-            "length" => { getlength = true; }
-
-            // Tests for password_length and handles errors.
-            _ => {
-                // Captures the program name.
-                if program_name.is_empty() {
-                    program_name = String::from(argument);
-
-                // Tests the password_length and saves it.
-                } else if password_length == 0 && getlength == true {
-                    match argument.parse::<i32>() {
-
-                        // Sets the password_length when Okay.
-                        Ok(n) => {
-                            password_length = n;
-                            getlength = false;
-                        },
-
-                        // Panics when the String can't be parsed into an i32.
-                        Err(e) => { panic!("{}. That is not a valid integer.", e); }
-                    }
-                } else {
-                    panic!("{} is not a valid argument.", argument);
-                }
-            }
-        }
-    }
-
-    if password_length == 0 {
-        password_length = 32;
-    }
+    // List of values from process_args() :
+    // [0] = program_name
+    // [1] = password_length
 
     // collects the String data from the user and processes potential errors.
     io::stdin()
@@ -80,14 +42,14 @@ fn main() {
     seed.pop();
 
     // Calls the function and recieves a value.
-    let seed = hash_and_base94(seed, password_length);
+    let seed = hash_and_base94(seed, args.get(1).unwrap().parse::<i32>().unwrap());
     
     // Prints the final seed to the command line for the user.
     println!("{}", seed);
 }
 
-
-
+// Accepts a seed and hashes it. Then outputs a String of the
+// has in Base94.
 fn hash_and_base94(seed: String, length: i32) -> String {
     // Creates hash object to process the seed.
     let mut hasher = Sha512::new();
@@ -105,6 +67,61 @@ fn hash_and_base94(seed: String, length: i32) -> String {
 
     // Returns the final Base94 String.
     seed
+}
+
+// Processes command line arguments and then outputs a Vec of Strings
+// that can be much more easily parsed into variables.
+fn process_args(args: Vec<String>) -> Vec<String> {
+
+    // Vector that catches all the values processed here.
+    let mut output = Vec::new();
+    
+    // Iterates through the arguments as input.
+    for argument in args {
+        match argument.as_str() {
+
+            // Displays the help text.
+            "help" => { help(); }
+
+            // Sets the program to grab the next argument as password_length.
+            "length" => { output[1] = String::from("0"); }
+
+            // Catches errors and handles the value for password_length and program_name.
+            _ => {
+
+                // Grabs the program name and saves it.
+                if output.is_empty() {
+                    output.push(String::from(argument));
+
+                    // Sets the default value for password_length.
+                    output.push(String::from("32"));
+
+                // Catches the value for password_length and handles errors.
+                } else if *output.get(1).unwrap() == String::from("0") {
+                    match argument.parse::<i32>() {
+
+                        // When password_length value is valid it saves it for later.
+                        Ok(n) => {
+                            output[1] = n.to_string();
+                        }
+
+                        // When password_length value is invalid, it notifies the user and exits.
+                        Err(e) => {
+                            println!("{}. 'length' value is not a valid integer.", e);
+                            process::exit(0);
+                        }
+                    }
+
+                // Catches invalid arguments, notifies user and exits.
+                } else {
+                    println!("{} is not a valid argument.", argument);
+                    process::exit(0);
+                }
+            }
+        }
+    }
+
+    output
 }
 
 fn help() {
