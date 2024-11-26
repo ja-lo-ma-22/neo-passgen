@@ -42,7 +42,7 @@ fn main() {
     seed.pop();
 
     // Calls the function and recieves a value.
-    let seed = hash_and_base94(seed, args.1);
+    let seed = hash_base94(seed, args.1, args.2);
     
     // Prints the final seed to the command line for the user.
     println!("{}", seed);
@@ -50,12 +50,14 @@ fn main() {
 
 // Accepts a seed and hashes it. Then outputs a String of the
 // has in Base94.
-fn hash_and_base94(seed: String, length: i32) -> String {
+fn hash_base94(seed: String, length: i32, count: i32) -> String {
     // Creates hash object to process the seed.
     let mut hasher = Sha512::new();
 
     // Inputs the seed into the hash object.
-    hasher.update(& seed);
+    for _n in 0..count {
+        hasher.update(& seed);
+    }
 
     // Processes the seed and outputs the final hash in binary.
     let seed = hasher.finalize();
@@ -71,11 +73,11 @@ fn hash_and_base94(seed: String, length: i32) -> String {
 
 // Processes command line arguments and then outputs a tuple.
 // that can be much more easily parsed into variables.
-fn process_args(args: Vec<String>) -> (String, i32) {
+fn process_args(args: Vec<String>) -> (String, i32, i32) {
 
     // Tuple that catches all the values processed here.
     // Default password_length is defined as index 1.
-    let mut output: (String, i32) = (String::from("blank"), 32);
+    let mut output: (String, i32, i32) = (String::from("blank"), 32, 1);
     
     // Iterates through the arguments as input.
     for argument in args {
@@ -87,7 +89,10 @@ fn process_args(args: Vec<String>) -> (String, i32) {
             // Sets the program to grab the next argument as password_length.
             "length" => { output.1 = 0; }
 
-            // Catches errors and handles the value for password_length and program_name.
+            "count" => { output.2 = 0; }
+
+            // Catches errors and handles the value for password_length
+            // and program_name.
             _ => {
 
                 // Grabs the program name and saves it.
@@ -103,9 +108,23 @@ fn process_args(args: Vec<String>) -> (String, i32) {
                             output.1 = n;
                         }
 
-                        // When password_length value is invalid, it notifies the user and exits.
+                        // When password_length value is invalid,
+                        // it notifies the user and exits.
                         Err(e) => {
                             println!("{}. 'length' value is not a valid integer.", e);
+                            process::exit(0);
+                        }
+                    }
+
+                // Catches the value for hashing count.
+                } else if output.2 == 0 {
+                    match argument.parse::<i32>() {
+                        Ok(n) => {
+                            output.2 = n;
+                        }
+
+                        Err(e) => {
+                            println!("{}. 'count' value is not a valid integer.", e);
                             process::exit(0);
                         }
                     }
@@ -135,23 +154,23 @@ mod tests {
     // Tests that the hashing function produces the correct ouput
     // for a given input.
     #[test]
-    fn test_hash_output() {
+    fn hash_output() {
 
         // Correct output for hash.
         let comparitor = String::from("=tD-,fsd#3N2+UyWOBhGeq_H|{`arN'~BIi!6fN4t:$s4goerLV40uewQ&#c9DzGV*e3obd&Y#[-4R");
 
         // Processed hash inputs for the correct output.
-        let output = hash_and_base94(String::from("testing"), 1000);
+        let output = hash_base94(String::from("testing"), 1000, 1);
 
         // Tests that processed output and correct output are the same.
         assert_eq!(output, comparitor);
     }
 
     #[test]
-    fn test_hash_default_length() {
+    fn hash_default_length() {
         
         // Set of arguments processed.
-        let output = hash_and_base94(String::from("hello"), 32);
+        let output = hash_base94(String::from("hello"), 32, 1);
 
         // Correct output for comparison.
         let comparitor = String::from("<-E@Y}UI>TG|7}/7DE&LI]caO}<;XTq+");
@@ -164,10 +183,10 @@ mod tests {
     }
 
     #[test]
-    fn test_hash_custom_length() {
+    fn hash_custom_length() {
 
         // Set of arguments processed.
-        let output = hash_and_base94(String::from("Peanut butter."), 20);
+        let output = hash_base94(String::from("Peanut butter."), 20, 1);
 
         // Correct output
         let comparitor = String::from(r"q`jka)RPne5Iv2(,\[&^");
@@ -178,7 +197,55 @@ mod tests {
     }
 
     #[test]
-    fn test_process_no_args() {
+    fn hash_custom_count() {
+
+        // Set of arguments processed.
+        let output = hash_base94(
+            String::from("douchcanoe"),
+            32,
+            6
+        );
+
+        // Correct output
+        let comparitor = String::from(r"5@.\eH8]zbhVvZXZbeEnFPBmO5H~Wlo<");
+
+        // Incorrect output
+        let bad_comparitor = String::from("*]-{g?k%$-fXc(|AmM5m%i6m3c8+}Jpc");
+
+        // Tests for count of 1 instead.
+        assert_ne!(output, bad_comparitor);
+        
+        // Tests for correct output.
+        assert_eq!(output, comparitor);
+    }
+
+    #[test]
+    fn hash_custom_length_count() {
+
+        // Set of arguments processed.
+        let output = hash_base94(
+            String::from("mystery"),
+            55,
+            8
+        );
+
+        // Correct output
+        let comparitor = String::from(
+            r"sYK)Tij/z!*yH+UO[$(,8=>LcDFu@;mEJ<dP%(C3cH[h3nDpH<r1V%'");
+
+        // Incorrect output
+        let bad_comparitor = String::from(
+            r")NHu`+Pq\btUfn#7f7Ugia]'H]|ux{-M*waj\*;EXg==I&R~^4U&&M$");
+
+        // Tests for count of 1 instead.
+        assert_ne!(output, bad_comparitor);
+
+        // Tests for correct output.
+        assert_eq!(output, comparitor);
+    }
+
+    #[test]
+    fn process_no_args() {
 
         // Fake set of arguments.
         let args = vec![String::from("program/name")];
@@ -187,14 +254,14 @@ mod tests {
         let out_args = process_args(args);
 
         // Correct output.
-        let comparitor: (String, i32) = (String::from("program/name"), 32);
+        let comparitor: (String, i32, i32) = (String::from("program/name"), 32, 1);
 
         // Tests ouput against correct output.
         assert_eq!(out_args, comparitor);
     }
 
     #[test]
-    fn test_process_some_args() {
+    fn process_length_args() {
 
         // Fake input arguments.
         let args = vec![
@@ -207,7 +274,61 @@ mod tests {
         let out_args = process_args(args);
 
         // Correct processed args.
-        let comparitor: (String, i32) = (String::from("folder/program/name"), 50);
+        let comparitor: (String, i32, i32) = (
+            String::from("folder/program/name"),
+            50, 
+            1
+        );
+
+        // Tests that the correct args and the processed args are equal.
+        assert_eq!(comparitor, out_args);
+    }
+
+    #[test]
+    fn process_count_args() {
+
+        // Fake inpu arguments.
+        let args = vec![
+            String::from("folder/program"),
+            String::from("count"),
+            String::from("5")
+        ];
+
+        // Processes fake arguments.
+        let out_args = process_args(args);
+
+        // Correct output arguments.
+        let comparitor: (String, i32, i32) = (
+            String::from("folder/program"),
+            32,
+            5
+        );
+
+        // Tests that the processed args are correct.
+        assert_eq!(comparitor, out_args);
+    }
+
+    #[test]
+    fn process_length_count_args() {
+
+        // Fake input arguments.
+        let args = vec![
+            String::from("folder/another/program/name"),
+            String::from("length"),
+            String::from("60"),
+            String::from("count"),
+            String::from("4")
+        ];
+
+        // Processes fake innput arguments.
+        let out_args = process_args(args);
+
+        // Correct output arguments.
+        let comparitor: (String, i32, i32) = (
+            String::from("folder/another/program/name"),
+            60,
+            4
+        );
 
         // Tests that the correct args and the processed args are equal.
         assert_eq!(comparitor, out_args);
