@@ -135,7 +135,7 @@ mod tests {
     // Tests that the hashing function produces the correct ouput
     // for a given input.
     #[test]
-    fn hash_test() {
+    fn test_hash_output() {
 
         // Correct output for hash.
         let comparitor = String::from("=tD-,fsd#3N2+UyWOBhGeq_H|{`arN'~BIi!6fN4t:$s4goerLV40uewQ&#c9DzGV*e3obd&Y#[-4R");
@@ -144,6 +144,36 @@ mod tests {
         let output = hash_and_base94(String::from("testing"), 1000);
 
         // Tests that processed output and correct output are the same.
+        assert_eq!(output, comparitor);
+    }
+
+    #[test]
+    fn test_hash_default_length() {
+        
+        // Set of arguments processed.
+        let output = hash_and_base94(String::from("hello"), 32);
+
+        // Correct output for comparison.
+        let comparitor = String::from("<-E@Y}UI>TG|7}/7DE&LI]caO}<;XTq+");
+
+        // Tests that the length is correct.
+        assert_eq!(output.len(), 32);
+
+        // Tests that the output is correct.
+        assert_eq!(comparitor, output);
+    }
+
+    #[test]
+    fn test_hash_custom_length() {
+
+        // Set of arguments processed.
+        let output = hash_and_base94(String::from("Peanut butter."), 20);
+
+        // Correct output
+        let comparitor = String::from(r"q`jka)RPne5Iv2(,\[&^");
+
+        assert_eq!(output.len(), 20);
+
         assert_eq!(output, comparitor);
     }
 
