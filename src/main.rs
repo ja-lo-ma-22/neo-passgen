@@ -26,14 +26,16 @@ fn main() {
     // collects command-line arguments into a vector
     let args: Vec<String> = env::args().collect();
 
-    // Sends the command-line arguments to a function to process, and returns an easy Vec<String> to parse.
+    // Sends the command-line arguments to a function to process,
+    // and returns an easy Vec<String> to parse.
     let args = process_args(args);
 
     // List of values from process_args() :
-    // [0] = program_name
-    // [1] = password_length
+    // .0 = program_name
+    // .1 = password_length
+    // .2 = hashing count
 
-    // collects the String data from the user and processes potential errors.
+    // Collects the String data from the user and processes potential errors.
     io::stdin()
         .read_line(&mut seed)
         .expect("Failed to read seed.");
@@ -50,7 +52,7 @@ fn main() {
 
 // Accepts a seed and hashes it. Then outputs a String of the
 // has in Base94.
-fn hash_base94(seed: String, length: i32, count: i32) -> String {
+fn hash_base94(seed: String, length: u32, count: u32) -> String {
     // Creates hash object to process the seed.
     let mut hasher = Sha512::new();
 
@@ -65,7 +67,7 @@ fn hash_base94(seed: String, length: i32, count: i32) -> String {
     // Encodes the binary hash as a Base94 String.
     let mut seed = encode(& seed, 94);
 
-    seed.truncate(length.try_into().unwrap());
+    seed.truncate(length as usize);
 
     // Returns the final Base94 String.
     seed
@@ -73,11 +75,11 @@ fn hash_base94(seed: String, length: i32, count: i32) -> String {
 
 // Processes command line arguments and then outputs a tuple.
 // that can be much more easily parsed into variables.
-fn process_args(args: Vec<String>) -> (String, i32, i32) {
+fn process_args(args: Vec<String>) -> (String, u32, u32) {
 
     // Tuple that catches all the values processed here.
     // Default password_length is defined as index 1.
-    let mut output: (String, i32, i32) = (String::from("blank"), 32, 1);
+    let mut output: (String, u32, u32) = (String::from("blank"), 32, 1);
     
     // Iterates through the arguments as input.
     for argument in args {
@@ -101,7 +103,7 @@ fn process_args(args: Vec<String>) -> (String, i32, i32) {
 
                 // Catches the value for password_length and handles errors.
                 } else if output.1 == 0 {
-                    match argument.parse::<i32>() {
+                    match argument.parse::<u32>() {
 
                         // When password_length value is valid it saves it for later.
                         Ok(n) => {
@@ -118,7 +120,7 @@ fn process_args(args: Vec<String>) -> (String, i32, i32) {
 
                 // Catches the value for hashing count.
                 } else if output.2 == 0 {
-                    match argument.parse::<i32>() {
+                    match argument.parse::<u32>() {
                         Ok(n) => {
                             output.2 = n;
                         }
@@ -254,7 +256,7 @@ mod tests {
         let out_args = process_args(args);
 
         // Correct output.
-        let comparitor: (String, i32, i32) = (String::from("program/name"), 32, 1);
+        let comparitor: (String, u32, u32) = (String::from("program/name"), 32, 1);
 
         // Tests ouput against correct output.
         assert_eq!(out_args, comparitor);
@@ -274,7 +276,7 @@ mod tests {
         let out_args = process_args(args);
 
         // Correct processed args.
-        let comparitor: (String, i32, i32) = (
+        let comparitor: (String, u32, u32) = (
             String::from("folder/program/name"),
             50, 
             1
@@ -298,7 +300,7 @@ mod tests {
         let out_args = process_args(args);
 
         // Correct output arguments.
-        let comparitor: (String, i32, i32) = (
+        let comparitor: (String, u32, u32) = (
             String::from("folder/program"),
             32,
             5
@@ -324,7 +326,7 @@ mod tests {
         let out_args = process_args(args);
 
         // Correct output arguments.
-        let comparitor: (String, i32, i32) = (
+        let comparitor: (String, u32, u32) = (
             String::from("folder/another/program/name"),
             60,
             4
