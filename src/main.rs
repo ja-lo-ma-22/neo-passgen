@@ -53,44 +53,43 @@ fn main() {
 
 // Accepts a seed and hashes it. Then outputs a String of the
 // has in Base94.
-fn hash_base94(seed: String, length: u32, count: u32, debug: bool) -> String {
-
-    // A vector of Strings to store a longer hash in chunks.
-    let mut process_seeds = Vec::new();
+fn hash_base94(seed: String, length: u32, hashes: u32, debug: bool) -> String {
 
     // Final String to output.
-    let mut final_seed = String::new();
+    let mut password = String::new();
 
     // How many chunks the seed String will be cut into.
-    let chunk_count = length / 75;
+    let chunk_count = ( length / 75 ) + 1;
 
     // Creates the number of chunks (of hashing objects) in the vector.
     for a in 0..chunk_count {
 
-        // Creates a set of hashing objects.
-        process_seeds.push(Sha512::new());
+        // Creates a hashing object.
+        let mut hasher = Sha512::new();
 
-        // Sets the seed for each object.
-        process_seeds[a as usize].update(& seed);
+        // Sets the seed for the object.
+        hasher.update(& seed);
 
-        // Makes each seed unique.
-        process_seeds[a as usize].update(a.to_string());
-    }
+        // Makes the seed unique.
+        hasher.update(a.to_string());
 
-    // Iterates on all of the hashing objects in the vector.
-    for counting in 0..count {
-        for one_seed in process_seeds {
-            one_seed.update(counting.to_string());
+        // Makes the password unique for different lengths.
+        hasher.update(length.to_string());
+
+        // Hashes the number of times as the count.
+        for count in 0..hashes {
+            hasher.update(count.to_string());
         }
-    }
 
-    // Completes all hashing objects and puts them into one final String.
-    for one_seed in process_seeds {
-        final_seed.push_str(one_seed.finalize().truncate(75));
-    }
+        // Encodes the final hash as a base94 String.
+        let mut carrier = encode(& hasher.finalize(), 94);
 
-    // Encodes the binary hash as a Base94 String.
-    let mut password = encode(& final_seed, 94);
+        // Sets the size of the String.
+        carrier.truncate(75);
+
+        // Puts the finished String onto the password.
+        password.push_str(&carrier);
+    }
 
     password.truncate(length as usize);
 
@@ -124,7 +123,7 @@ fn process_args(args: Vec<String>) -> (String, u32, u32, bool) {
             "length" => { proc_args.1 = 0; }
 
             // Accepts a value to change the count for hashing.
-            "count" => { proc_args.2 = 0; }
+            "hashes" => { proc_args.2 = 0; }
 
             // Turns debug information on.
             "debug" => { proc_args.3 = true; }
@@ -183,9 +182,10 @@ fn process_args(args: Vec<String>) -> (String, u32, u32, bool) {
 }
 
 fn help() {
-    println!("The help message is not yet implemented. Good l(uck.");
+    println!("The help message is not yet implemented. Good luck.");
     process::exit(0);
 }
+
 
 
 #[cfg(test)]
@@ -198,10 +198,10 @@ mod tests {
     fn hash_output() {
 
         // Correct output for hash.
-        let comparitor = String::from("vHZ%T4#B(*vd.I}{J=pp`a:k)]8Y(HH?FZjX^(iyqh19!GL6r`>}q5cKXzu5?+1,K8~%q/DGK,(_xm");
+        let comparitor = String::from("<#*6'Y:[tndK3%T`qtD$(C`eIS])]A6?");
 
         // Processed hash inputs for the correct output.
-        let output = hash_base94(String::from("apple"), 1000, 1, false);
+        let output = hash_base94(String::from("apple"), 32, 1, false);
 
         // Tests that processed output and correct output are the same.
         assert_eq!(output, comparitor);
@@ -214,7 +214,7 @@ mod tests {
         let output = hash_base94(String::from("hello"), 32, 1, false);
 
         // Correct output for comparison.
-        let comparitor = String::from("msBE(8v`nsxt&u>0i|wzw_]ygwX0-mLG");
+        let comparitor = String::from("|#auduHx~Lm>V00&2Pu{O;]rd-QZT+|:");
 
         // Tests that the length is correct.
         assert_eq!(output.len(), 32);
@@ -230,7 +230,7 @@ mod tests {
         let output = hash_base94(String::from("peanut butter"), 20, 1, false);
 
         // Correct output
-        let comparitor = String::from("xsO=>hRA`JzZ;!xEHA-w");
+        let comparitor = String::from("&%dWJ|:iD3q)'X'r(vOy");
 
         assert_eq!(output.len(), 20);
 
@@ -249,10 +249,10 @@ mod tests {
         );
 
         // Correct output
-        let comparitor = String::from("-0l:kt5AMKduvK=#):&^U,rN'{}[6-?t");
+        let comparitor = String::from(r"Q1!0.cxUpSJcc@m4y-PEX~O=nRZ0_5{3");
 
         // Incorrect output
-        let bad_comparitor = String::from("*]-{g?k%$-fXc(|AmM5m%i6m3c8+}Jpcdjnf");
+        let bad_comparitor = String::from(r"nTX$_F\o>hv8HxHXMU#~vm|vp|Up>7kC");
 
         // Tests for count of 1 instead.
         assert_ne!(output, bad_comparitor);
@@ -274,7 +274,7 @@ mod tests {
 
         // Correct output
         let comparitor = String::from(
-            "-!Jvf.yn_#?Ko3LsZcq_;p,y33c)2yPv)1Ve6oh.h5hV'i5VV#Za;U2");
+            "4i`M~Mf9r7Tk`]N;q6t'lpuN(/~qFC?V9u5&=tMO}4#m!$gBcBZqr<a");
 
         // Incorrect output
         let bad_comparitor = String::from(
@@ -354,13 +354,24 @@ mod tests {
         assert_eq!(comparitor, out_args);
     }
 
+
+
+    // WARNING::
+    //
+    // This test right here caused me a LOT of headache.
+    //
+    // I could not for the life of me figure out why it wouldn't
+    // run... Turns out that I used the wrong argument down there:
+
     #[test]
     fn process_count_args() {
 
-        // Fake inpu arguments.
+        // Fake input arguments.
         let args = vec![
             String::from("folder/program"),
-            String::from("count"),
+
+            // This was 'count' when it was broken.
+            String::from("hashes"),
             String::from("5")
         ];
 
@@ -387,7 +398,7 @@ mod tests {
             String::from("folder/another/program/name"),
             String::from("length"),
             String::from("60"),
-            String::from("count"),
+            String::from("hashes"),
             String::from("4")
         ];
 
