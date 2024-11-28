@@ -54,31 +54,52 @@ fn main() {
 // Accepts a seed and hashes it. Then outputs a String of the
 // has in Base94.
 fn hash_base94(seed: String, length: u32, count: u32, debug: bool) -> String {
-    // Creates hash object to process the seed.
-    let mut hasher = Sha512::new();
 
-    // Inputs the seed into the hash object.
-    for _n in 0..count {
-        hasher.update(& seed);
+    // A vector of Strings to store a longer hash in chunks.
+    let mut process_seeds = Vec::new();
 
-        // Causes a change in length to change the hash entirely.
-        hasher.update(length.to_string());
+    // Final String to output.
+    let mut final_seed = String::new();
+
+    // How many chunks the seed String will be cut into.
+    let chunk_count = length / 75;
+
+    // Creates the number of chunks (of hashing objects) in the vector.
+    for a in 0..chunk_count {
+
+        // Creates a set of hashing objects.
+        process_seeds.push(Sha512::new());
+
+        // Sets the seed for each object.
+        process_seeds[a as usize].update(& seed);
+
+        // Makes each seed unique.
+        process_seeds[a as usize].update(a.to_string());
     }
 
-    // Processes the seed and outputs the final hash in binary.
-    let seed = hasher.finalize();
+    // Iterates on all of the hashing objects in the vector.
+    for counting in 0..count {
+        for one_seed in process_seeds {
+            one_seed.update(counting.to_string());
+        }
+    }
+
+    // Completes all hashing objects and puts them into one final String.
+    for one_seed in process_seeds {
+        final_seed.push_str(one_seed.finalize().truncate(75));
+    }
 
     // Encodes the binary hash as a Base94 String.
-    let mut seed = encode(& seed, 94);
+    let mut password = encode(& final_seed, 94);
 
-    seed.truncate(length as usize);
+    password.truncate(length as usize);
 
     if debug == true {
-        println!("Password length is: {}", seed.len());
+        println!("Password length is: {}", password.len());
     }
 
     // Returns the final Base94 String.
-    seed
+    password
 }
 
 // Processes command line arguments and then outputs a tuple.
