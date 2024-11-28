@@ -314,6 +314,20 @@ mod tests {
     }
 
     #[test]
+    fn hash_length_longer() {
+        
+        // Set of input arguments.
+        let output = hash_base94(
+            String::from("hello"),
+            500,
+            1,
+            false
+        );
+
+        assert_eq!(output.len(), 500);
+    }
+
+    #[test]
     fn process_no_args() {
 
         // Fake set of arguments.
