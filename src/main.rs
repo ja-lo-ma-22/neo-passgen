@@ -59,6 +59,9 @@ fn hash_base94(seed: String, length: u32, count: u32) -> String {
     // Inputs the seed into the hash object.
     for _n in 0..count {
         hasher.update(& seed);
+
+        // Causes a change in length to change the hash entirely.
+        hasher.update(length.to_string());
     }
 
     // Processes the seed and outputs the final hash in binary.
@@ -159,10 +162,10 @@ mod tests {
     fn hash_output() {
 
         // Correct output for hash.
-        let comparitor = String::from("=tD-,fsd#3N2+UyWOBhGeq_H|{`arN'~BIi!6fN4t:$s4goerLV40uewQ&#c9DzGV*e3obd&Y#[-4R");
+        let comparitor = String::from("vHZ%T4#B(*vd.I}{J=pp`a:k)]8Y(HH?FZjX^(iyqh19!GL6r`>}q5cKXzu5?+1,K8~%q/DGK,(_xm");
 
         // Processed hash inputs for the correct output.
-        let output = hash_base94(String::from("testing"), 1000, 1);
+        let output = hash_base94(String::from("apple"), 1000, 1);
 
         // Tests that processed output and correct output are the same.
         assert_eq!(output, comparitor);
@@ -175,7 +178,7 @@ mod tests {
         let output = hash_base94(String::from("hello"), 32, 1);
 
         // Correct output for comparison.
-        let comparitor = String::from("<-E@Y}UI>TG|7}/7DE&LI]caO}<;XTq+");
+        let comparitor = String::from("msBE(8v`nsxt&u>0i|wzw_]ygwX0-mLG");
 
         // Tests that the length is correct.
         assert_eq!(output.len(), 32);
@@ -188,10 +191,10 @@ mod tests {
     fn hash_custom_length() {
 
         // Set of arguments processed.
-        let output = hash_base94(String::from("Peanut butter."), 20, 1);
+        let output = hash_base94(String::from("peanut butter"), 20, 1);
 
         // Correct output
-        let comparitor = String::from(r"q`jka)RPne5Iv2(,\[&^");
+        let comparitor = String::from("xsO=>hRA`JzZ;!xEHA-w");
 
         assert_eq!(output.len(), 20);
 
@@ -203,16 +206,16 @@ mod tests {
 
         // Set of arguments processed.
         let output = hash_base94(
-            String::from("douchcanoe"),
+            String::from("banana"),
             32,
             6
         );
 
         // Correct output
-        let comparitor = String::from(r"5@.\eH8]zbhVvZXZbeEnFPBmO5H~Wlo<");
+        let comparitor = String::from("-0l:kt5AMKduvK=#):&^U,rN'{}[6-?t");
 
         // Incorrect output
-        let bad_comparitor = String::from("*]-{g?k%$-fXc(|AmM5m%i6m3c8+}Jpc");
+        let bad_comparitor = String::from("*]-{g?k%$-fXc(|AmM5m%i6m3c8+}Jpcdjnf");
 
         // Tests for count of 1 instead.
         assert_ne!(output, bad_comparitor);
@@ -226,24 +229,48 @@ mod tests {
 
         // Set of arguments processed.
         let output = hash_base94(
-            String::from("mystery"),
+            String::from("foo"),
             55,
             8
         );
 
         // Correct output
         let comparitor = String::from(
-            r"sYK)Tij/z!*yH+UO[$(,8=>LcDFu@;mEJ<dP%(C3cH[h3nDpH<r1V%'");
+            "-!Jvf.yn_#?Ko3LsZcq_;p,y33c)2yPv)1Ve6oh.h5hV'i5VV#Za;U2");
 
         // Incorrect output
         let bad_comparitor = String::from(
-            r")NHu`+Pq\btUfn#7f7Ugia]'H]|ux{-M*waj\*;EXg==I&R~^4U&&M$");
+            ")NHu`+PqgbtUfn#7f7Ugia]'H]|ux{-M*wajer;EXg==I&R~^4U&&M$");
 
         // Tests for count of 1 instead.
         assert_ne!(output, bad_comparitor);
 
         // Tests for correct output.
         assert_eq!(output, comparitor);
+    }
+
+    #[test]
+    fn hash_length_change() {
+
+        // First set of arguments processed.
+        let mut output_1 = hash_base94(
+            String::from("carrot"),
+            32,
+            1
+        );
+
+        // Second set of arguments processed.
+        let mut output_2 = hash_base94(
+            String::from("carrot"),
+            33,
+            1
+        );
+
+        output_1.truncate(32);
+        output_2.truncate(32);
+
+        // Tests that they are not identical.
+        assert_ne!(output_1, output_2);
     }
 
     #[test]
