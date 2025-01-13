@@ -1,0 +1,58 @@
+Neo_PassGen Pseudocode
+
+
+
+1. Accept arguments from the command-line
+
+2. Use constructor function for HashArguments struct type.
+
+3. Process HashArguments with the following methods in order:
+
+	* Hash the string (multithreading)
+	* Put the string in Base94 and truncate
+	* Return the string alone
+
+4. Return the string and destruct the HashArgument
+
+
+
+
+
+Main.rs
+
+	This program implements the CLI for the program and makes it as user friendly as possible.
+
+
+
+	1. Calls the autohash() function on a set of inputs. Catches the password.
+
+	Or
+
+	1. Calls the new() function and catches the HashArgument type.
+
+	2. Calls the .hash() or .hash_multi() method on the HashArgument type.
+
+	3. Calls the .encode() method on the HashArgument type.
+
+	4. Calls the .finish() method on the HashArgument type and catches the password.
+
+Lib.rs
+
+	Implements the backend for the program and gives a public API.
+	It accepts a String and some arguments, and hashes it.
+
+
+
+	autohash() handles everything internally, and returns just a password String.
+
+	new() is a constructor function for the HashArgument type. Simple.
+
+	.hash() is the meat. It cuts the input into chunks and hashes each one,
+	then collects it into a String and returns it.
+
+	.hash_multi() is a multithreaded version of the original .hash() function. They may be merged at
+	some point. But for now, this is simpler to implement and debug.
+
+	.encode() encodes the hashed String as base94.
+
+	.finish() destructs the type and returns the finished password String.
